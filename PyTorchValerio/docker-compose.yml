@@ -1,10 +1,10 @@
-version: '3'
+version: "3"
 services:
   pytorch_test:
     restart: always
     build: .
-    container_name: 'pytorch_test'
-    working_dir: '/root/'
+    container_name: "pytorch_test"
+    working_dir: "/root/"
     tty: true
     volumes:
       - ./src:/root/src
