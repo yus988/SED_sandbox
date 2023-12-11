@@ -13,41 +13,55 @@ from torchvision.transforms import ToTensor
 
 BATCH_SIZE = 128
 EPOCHS = 10
-LERNING_RATE = 0.001
+LEARNING_RATE = 0.001
 
 
 class FeedForwardNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.flatten = nn.Flatten()  # flatten is arbitary name
+        self.flatten = nn.Flatten()
         self.dense_layers = nn.Sequential(
             nn.Linear(28 * 28, 256), nn.ReLU(), nn.Linear(256, 10)
         )
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, input_data):
-        flattened_data = self.flatten(input_data)
-        logits = self.dense_layers(flattened_data)
+        x = self.flatten(input_data)
+        logits = self.dense_layers(x)
         predictions = self.softmax(logits)
         return predictions
 
 
-def train_one_epoch(model, data_loader, loss_fn, optimiser, device):
-    for (
-        inputs,
-        targets,
-    ) in data_loader:
-        inputs, targets = input.to(device), targets.to(device)
-        # calculate loss
-        predictions = model(inputs)
-        loss = loss_fn(predictions, targets)
+def download_mnist_datasets():
+    train_data = datasets.MNIST(
+        root="data",
+        train=True,
+        download=True,
+        transform=ToTensor(),
+    )
+    validation_data = datasets.MNIST(
+        root="data",
+        train=False,
+        download=True,
+        transform=ToTensor(),
+    )
+    return train_data, validation_data
 
-        # backpropagate loss and update weights
+
+def train_one_epoch(model, data_loader, loss_fn, optimiser, device):
+    for input, target in data_loader:
+        input, target = input.to(device), target.to(device)
+
+        # calculate loss
+        prediction = model(input)
+        loss = loss_fn(prediction, target)
+
+        # backpropagate error and update weights
         optimiser.zero_grad()
         loss.backward()
         optimiser.step()
 
-    print(f"Loss: {loss.item()}")
+    print(f"loss: {loss.item()}")
 
 
 def train(model, data_loader, loss_fn, optimiser, device, epochs):
@@ -58,19 +72,9 @@ def train(model, data_loader, loss_fn, optimiser, device, epochs):
     print("training is done")
 
 
-def download_mnist_datasets():
-    train_data = datasets.MNIST(
-        root="data", download=True, train=True, transform=ToTensor()
-    )
-    validation_data = datasets.MNIST(
-        root="data", download=True, train=True, transform=ToTensor()
-    )
-    return train_data, validation_data
-
-
 if __name__ == "__main__":
     # downlad MNIST dataset
-    train_data = download_mnist_datasets()
+    train_data, _ = download_mnist_datasets() # _ represets unnecessary but need to assign
     print("MNIST dataset downloaded")
 
     # create a data loader for the train set
@@ -83,10 +87,11 @@ if __name__ == "__main__":
         device = "cpu"
     print(f"Using {device} device")
     feed_forward_net = FeedForwardNet().to(device)
+    print(feed_forward_net)
 
     # instantiate loss function
     loss_fn = nn.CrossEntropyLoss()
-    optimiser = torch.optim.Adam(feed_forward_net.parameters(), lr=LERNING_RATE)
+    optimiser = torch.optim.Adam(feed_forward_net.parameters(), lr=LEARNING_RATE)
 
     # train_model
     train(feed_forward_net, train_data_loader, loss_fn, optimiser, device, EPOCHS)
