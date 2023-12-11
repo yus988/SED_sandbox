@@ -1,0 +1,10 @@
+version: "3"
+services:
+  pytorch_test:
+    restart: always
+    build: .
+    container_name: "study_asp"
+    working_dir: "/root/work"
+    tty: true
+    volumes:
+      - .:/root/work
