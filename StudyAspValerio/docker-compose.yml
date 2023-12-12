@@ -1,6 +1,6 @@
 version: "3"
 services:
-  pytorch_test:
+  jupyter_module:
     restart: always
     build: .
     container_name: "study_asp"
@@ -8,3 +8,9 @@ services:
     tty: true
     volumes:
       - .:/root/work
+    ports:
+      - 8888:8888
+# ブラウザ上で開く方法
+# $ pip install jupyter jupyterlab
+# $ jupyter notebook --port 8888 --ip=0.0.0.0 --allow-root
+# https://qiita.com/shizuma/items/a4738c5a250ddc6d0c9f
