@@ -8,4 +8,4 @@ services:
     tty: true
     volumes:
       - ./src:/root/src
-      - ./lib:/pip-lib
+      # - ./lib:/pip-lib

@@ -24,7 +24,12 @@
   "remoteUser": "devcontainer",
   "customizations": {
     "vscode": {
-	  "extensions": [],
+	  "extensions": [
+        "MS-CEINTL.vscode-language-pack-ja",
+        "ms-python.black-formatter",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+    ],
       "settings": {
         "python.autoComplete.extraPaths": [
           "/usr/local/lib/python3.8/site-packages"
