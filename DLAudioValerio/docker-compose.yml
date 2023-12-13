@@ -1,0 +1,11 @@
+version: "3"
+services:
+  dl_audio_study:
+    restart: always
+    build: .
+    container_name: "dl_audio_study_test"
+    working_dir: "/root/"
+    tty: true
+    volumes:
+      - ./src:/root/src
+      - ./lib:/pip-lib
