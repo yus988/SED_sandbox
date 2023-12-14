@@ -2,7 +2,7 @@ import keras
 import numpy as np
 import librosa
 
-MODEL_PATH = "/dataset/model.h5"
+MODEL_PATH = "model.h5"
 NUM_SAMPLES_TO_CONSIDER = 22050  # 1sec
 
 class _Keyword_Spotting_Service:
