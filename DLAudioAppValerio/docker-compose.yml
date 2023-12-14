@@ -1,9 +1,9 @@
 version: "3"
 services:
-  dl_audio_study:
+  app:
     restart: always
     build: .
-    container_name: "dl_audio_study"
+    container_name: "dl_audio_app"
     working_dir: "/root/"
     tty: true
     volumes:
