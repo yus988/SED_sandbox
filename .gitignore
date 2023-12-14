@@ -2,6 +2,7 @@
 node_modules/
 data/
 datasets/
+dataset/
 
 # ファイルのパターン一致でコンパイルなどで生成したファイルを指定する場合
 *.com
