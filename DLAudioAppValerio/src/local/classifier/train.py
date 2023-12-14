@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import keras
 
-DATA_PATH = "data.json"
+DATA_PATH = "../dataset/data.json"
 SAVED_MODEL_PATH = "model.h5"
 LEARNING_RATE = 0.0001
 EPOCHS = 40

@@ -3,7 +3,7 @@ import os
 import json
 
 DATASET_PATH = "dataset"
-JSON_PATH = "/dataset/data.json"
+JSON_PATH = "../dataset/data.json"
 SAMPLES_TO_CONSIDER = 22050  # 1 sec worth of sound
 
 
