@@ -15,7 +15,6 @@ BATCH_SIZE = 128
 EPOCHS = 10
 LEARNING_RATE = 0.001
 
-
 class FeedForwardNet(nn.Module):
     def __init__(self):
         super().__init__()
