@@ -13,7 +13,7 @@ import pyqtgraph as pg
 
 from rasp_audio_stream import AudioInputStream
 
-
+     
 class PQGMelSpectrogram:
     def __init__(
         self,
@@ -45,19 +45,20 @@ class PQGMelSpectrogram:
         # ====================================================
         ## PyQtGraph の初期設定
         app = pg.QtWidgets.QApplication([])
-        win = pg.GraphicsLayoutWidget(show=True)
-        win.setWindowTitle("realtime plot")
-        win.resize(size[0], size[1])
-        win.show()
-
+        self.win = pg.GraphicsLayoutWidget(show=True)
+        self.win.setWindowTitle("realtime plot")
+        self.win.resize(size[0], size[1])
+        # self.win.addPlot(title="")
+        
         ## ImageItem の設定
         imageitem = pg.ImageItem(border="k")
         cmap = pg.colormap.getFromMatplotlib("jet")
+        # cmap = pg.colormap.get("CET-L17")
         bar = pg.ColorBarItem(cmap=cmap)
         bar.setImageItem(imageitem)
 
-        ## ViewBox の設定
-        viewbox = win.addViewBox()
+        # ## ViewBox の設定
+        viewbox = self.win.addViewBox()
         viewbox.setAspectLocked(lock=True)
         viewbox.addItem(imageitem)
 
@@ -71,7 +72,8 @@ class PQGMelSpectrogram:
         axis_left.setTicks([yticks.items()])
 
         ## PlotItemの設定
-        plotitem = pg.PlotItem(viewBox=viewbox, axisItems={"left": axis_left})
+        # plotitem = pg.PlotItem(viewBox=viewbox, axisItems={"left": axis_left})
+        plotitem = pg.PlotItem(viewBox=viewbox)
         # グラフの範囲
         plotitem.setLimits(minXRange=0, maxXRange=self.n_frames, minYRange=0, maxYRange=self.n_mels)
         # アスペクト比固定
@@ -80,16 +82,15 @@ class PQGMelSpectrogram:
         plotitem.setMouseEnabled(x=False, y=False)
         # ラベルのセット
         plotitem.setLabels(bottom="Time-frame", left="Frequency")
-        win.addItem(plotitem)
+        self.win.addItem(plotitem)
 
         self.app = app
-        self.win = win
         self.viewbox = viewbox
         self.plotitem = plotitem
         self.imageitem = imageitem
 
-        # pg.setConfigOptions(antialias=True)
-        pg.setConfigOption('useNumba', True)
+        pg.setConfigOptions(antialias=True)
+        # pg.setConfigOption('useNumba', True)
 
     def update(self):
         if self.iter > 0:
@@ -117,7 +118,7 @@ class PQGMelSpectrogram:
 
     def run_app(self):
         timer = pg.QtCore.QTimer()
-        # timer.timeout.connect(self.update)
+        timer.timeout.connect(self.update)
         timer.start(1 / self.fps * 1000)
 
         if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, "PYQT_VERSION"):

@@ -6,7 +6,10 @@ class AudioInputStream:
     def __init__(self, 
                  format=pyaudio.paFloat32, 
                  input_device_keyword="VoiceMeeter Output",
-                 CHUNK=1024,
+                #  input_device_keyword="スピーカー",
+                #  input_device_keyword="Input",
+                #  CHUNK=1024,
+                 CHUNK=512,
                  maxInputChannels=2
                  ):
         self.maxInputChannels = maxInputChannels
@@ -59,6 +62,7 @@ class AudioInputStream:
             print(f"=========================================================")
             print(f"Input device:  {self.input_device_name} is OK.")
             print(f"\tRATE:      {self.RATE}")
+            print(f"\tINDEX:      {self.input_device_index}")
             print(f"\tCHANNELS:  {self.CHANNELS}")
             print(f"\tCHUNK:     {self.CHUNK}")
             print(f"=========================================================")
