@@ -1,0 +1,12 @@
+version: "3"
+services:
+  app:
+    restart: always
+    build: .
+    container_name: "DLAudioRealtime"
+    working_dir: "/root/"
+    tty: true
+    volumes:
+      - ./src:/root/src
+    # extra_hosts:                  # 追加
+    #   - localhost:172.21.0.1

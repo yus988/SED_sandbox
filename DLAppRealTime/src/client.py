@@ -1,11 +1,9 @@
 import requests
 
 # URL="http://127.0.0.1/predict"
-# URL="http://localhost:80/predict"
-URL ="http://host.docker.internal:80//predict"
-
-# TEST_AUDIO_FILE_PATH = "test/test.wav"
-TEST_AUDIO_FILE_PATH = "test/left.wav"
+URL="http://localhost:80/predict"
+TEST_AUDIO_FILE_PATH = "test/test.wav"
+# TEST_AUDIO_FILE_PATH = "test/left.wav"
 
 if __name__ == "__main__":
     audio_file = open(TEST_AUDIO_FILE_PATH,"rb")

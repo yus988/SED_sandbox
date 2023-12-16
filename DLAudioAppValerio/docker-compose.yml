@@ -10,4 +10,5 @@ services:
       - ./src:/root/src
       # - ./lib:/pip-lib
     extra_hosts:                  # 追加
-      - localhost:172.21.0.1
+      # - localhost:172.21.0.1
+      - "host.docker.internal:host-gateway"
