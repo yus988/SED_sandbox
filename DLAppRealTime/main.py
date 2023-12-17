@@ -8,13 +8,15 @@ from kss_raw import Keyword_Spotting_Service
 
 TEST_AUDIO_FILE_PATH = "./test/left.wav"
 SAMPLE_RATE = 22050
-CHUNK = int(SAMPLE_RATE/10)
-CHUNK_MEL = 22050 # 推定したい音の長さに合わせる。1秒=sample_rate
+CHUNK = int(SAMPLE_RATE / 10)
+CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 
-    # # 使用する推論を代入
-    # def setPredictor(self, predictor):
-    #     self.pred = predictor
+# # 使用する推論を代入
+# def setPredictor(self, predictor):
+#     self.pred = predictor
+pred_buffer = []
+
 
 class AudioInputStream:
     def __init__(self):
@@ -31,26 +33,40 @@ class AudioInputStream:
             frames_per_buffer=CHUNK,
             stream_callback=self.update,
         )
-    
+
     # 音声を取り込む度に実行する関数
     # 音声取り込み => 推論用のAudio配列にFIFOで挿入 => 推論して結果を表示
     def update(self, in_data, frame_count, time_info, status):
+        global pred_buffer
         # 0. 取得したデータを16進数で配列化
         wave = array.array("h", in_data)
-        # print(f"wave len = {len(wave)}")
-        # print(f"buf len = {len(self.audio_buffer_data)}")
+        # 1. 取得したデータを配列に追加
+        pred_buffer.extend(wave)
+        # 2. 超えている場合、最初のCHUNK分を削除
+        if len(pred_buffer) > CHUNK_MEL:
+            # print(f"buf len before: {len(pred_buffer)}")
+            del pred_buffer[:CHUNK]
+            # print(f"buf len after: {len(pred_buffer)}")
+        # # 3. 推論用の配列を更新（-1~1にマップするため 32767 で割る）
+        # if len(self.audio_buffer_data) == CHUNK_MEL:
+        #     pred_buffer = np.array(self.audio_buffer_data) / 32768.0
+
+        # self.audio_buffer_queue.put(wave, True)
+        # print(f"wave len = {wave}")
+        # print(f"buf len = {len(pred_buffer)}")
+
         # 1. que が full になるまで入れる（基本開始直後のみ）
-        while not self.audio_buffer_queue.full():
-            self.audio_buffer_queue.put(wave)
+
+        # while not self.audio_buffer_queue.empty():
+        #     self.audio_buffer_data.append()
         # 2. full になった que から CHUNK 分のデータを捨てる
-        for i in range(1, CHUNK):
-            self.audio_buffer_queue.get()
-        # 3. 空いたところに新しい CHUNK 分のデータを入れる
-        if len(wave)==CHUNK:
-            self.audio_buffer_queue.put(wave)
-        # self.audio_buffer_data = self.audio_buffer_queue
+        # for i in range(1, CHUNK):
+        #     self.audio_buffer_queue.get()
+        # # 3. 空いたところに新しい CHUNK 分のデータを入れる
+        # if len(wave)==CHUNK:
+        #     self.audio_buffer_queue.put(wave)
+        # # self.audio_buffer_data = self.audio_buffer_queue
         return (None, pyaudio.paContinue)
-        
 
     # 後々消す
     def AudioInput(self):
@@ -59,6 +75,7 @@ class AudioInputStream:
         # 32768.0=2^16で割ってるのは正規化(絶対値を1以下にすること)
         ret = np.frombuffer(ret, dtype="int16") / 32768.0
         return ret
+
 
 if __name__ == "__main__":
     # pro_size = 10
@@ -69,16 +86,18 @@ if __name__ == "__main__":
     kss = Keyword_Spotting_Service()
     ais = AudioInputStream()
     while ais.stream.is_active():
-        if ais.audio_buffer_queue.full():
-            predicted_keyword = kss.predict(ais.audio_buffer_queue, SAMPLE_RATE)
+        # print(f"{pred_buffer}")
+        if len(pred_buffer) == CHUNK_MEL:
+            buf = np.array(pred_buffer) / 32768.0
+            predicted_keyword = kss.predict(buf, SAMPLE_RATE)
             print(f"Predicted keyword is: {predicted_keyword}")
         else:
             print("queue is not full")
-        
+
         # val = ais.AudioInput()[0]
         # rms = np.sqrt(np.mean(val**2))
         # print("\rVal = {0}".format(rms), end="")
-        time.sleep(1) # 推論頻度を決定
+        time.sleep(1)  # 推論頻度を決定
 
     ais.stream.stop_stream()
     ais.stream.close()
