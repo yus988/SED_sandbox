@@ -12,7 +12,7 @@ import keyboard
 
 TEST_AUDIO_FILE_PATH = "./test/left.wav"
 SAMPLE_RATE = 22050
-CHUNK = int(SAMPLE_RATE / 1)
+CHUNK = int(SAMPLE_RATE / 10)
 CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     i = 0
     global kss
     kss = Keyword_Spotting_Service()
-    
+    ditect = ""
     ais = AudioInputStream()
     while ais.stream.is_active():
         # ais.recordOnce('./wav/rec_{}.wav'.format(i), rec_bin_buffer)
@@ -125,15 +125,17 @@ if __name__ == "__main__":
         if len(pred_buffer) == CHUNK_MEL:
             buf = np.array(pred_buffer) / 32768.0
             predicted_keyword = kss.predict(buf, SAMPLE_RATE)
-            print(f"Predicted keyword is: {predicted_keyword}")
-        else:
-            print("queue is not full")
-
+            # print(f"Predicted keyword is: {predicted_keyword}")
+            if predicted_keyword == "dog":
+                detect = predicted_keyword
+            else:
+                detect = "____"
+            print('\rdetect: {}'.format(detect), end='')
         # val = ais.AudioInput()[0]
         # rms = np.sqrt(np.mean(val**2))
         # print("\rVal = {0}".format(rms), end="")
 
-        time.sleep(1)  # 推論頻度を決定
+        time.sleep(0.1)  # 推論頻度を決定
         i+=1
 
     ais.stream.stop_stream()

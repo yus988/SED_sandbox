@@ -48,7 +48,7 @@ class _Keyword_Spotting_Service:
         # convert 2d MFCCs array into 4d array -> (#samples, #segments, #coefficients, #channels)
         MFCCs = MFCCs[np.newaxis, ..., np.newaxis]
         # make prediction
-        predictions = self.model.predict(MFCCs)  # [ [0.1, 0.6, ...] ]
+        predictions = self.model.predict(MFCCs, verbose=None)  # [ [0.1, 0.6, ...] ]
         predicted_index = np.argmax(predictions)
         predicted_keyword = self._mappings[predicted_index]
         return predicted_keyword
