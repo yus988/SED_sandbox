@@ -9,11 +9,11 @@ import pyqtgraph as pg
 import sys
 import scipy.io.wavfile
 import wave
-
+import keyboard
 
 TEST_AUDIO_FILE_PATH = "./test/left.wav"
 SAMPLE_RATE = 22050
-CHUNK = int(SAMPLE_RATE / 10)
+CHUNK = int(SAMPLE_RATE / 1)
 CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 
@@ -51,18 +51,31 @@ class AudioInputStream:
         self.audio_buffer_queue = queue.Queue(maxsize=CHUNK)  # メススペクトログラムから推定する用のバッファ。アプリによって長さは異なる
         self.audio_buffer_data = []  # 推論用の配列
         self.channel = 1
+        self.rate = SAMPLE_RATE
         self.stream = self.audio.open(
             format=pyaudio.paInt16,
             channels=self.channel,
-            rate=SAMPLE_RATE,
+            rate=self.rate,
             input=True,
-            frames_per_buffer=CHUNK,
+            frames_per_buffer=self.CHUNK,
             stream_callback=self.update,
         )
+        self.wavefile = self._prepare_file()
+
+    def _prepare_file(self, fname='rec_test.wav', mode='wb'):
+        wavefile = wave.open(fname, mode)
+        wavefile.setnchannels(self.channel)
+        wavefile.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))
+        wavefile.setframerate(self.rate)
+        return wavefile
 
     # 音声を取り込む度に実行する関数
     # 音声取り込み => 推論用のAudio配列にFIFOで挿入 => 推論して結果を表示
     def update(self, in_data, frame_count, time_info, status):
+        # 録音テスト
+        if keyboard.is_pressed('r'):
+            self.wavefile.writeframes(in_data)
+        
         global pred_buffer
         # 0. 取得したデータを16進数で配列化
         wave = array.array("h", in_data)
