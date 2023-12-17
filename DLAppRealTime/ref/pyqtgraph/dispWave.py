@@ -9,7 +9,6 @@ import sys
 import pyaudio
 import struct
 
-
 class PlotWindow:
     def __init__(self):
         # プロット初期設定
@@ -20,7 +19,7 @@ class PlotWindow:
         self.curve = self.plt.plot()  # プロットデータを入れる場所
 
         # マイクインプット設定
-        self.CHUNK = 1024  # 1度に読み取る音声のデータ幅
+        self.CHUNK = 2048  # 1度に読み取る音声のデータ幅
         self.RATE = 44100  # サンプリング周波数
         self.audio = pyaudio.PyAudio()
         self.stream = self.audio.open(
@@ -45,7 +44,6 @@ class PlotWindow:
         # 32768.0=2^16で割ってるのは正規化(絶対値を1以下にすること)
         ret = np.frombuffer(ret, dtype="int16") / 32768.0
         return ret
-
 
 if __name__ == "__main__":
     plotwin = PlotWindow()
