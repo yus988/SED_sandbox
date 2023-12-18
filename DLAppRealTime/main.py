@@ -17,7 +17,6 @@ SAMPLE_RATE = 22050
 CHUNK = int(SAMPLE_RATE / 10)
 CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
-
 # 推論に使われる音声を描画
 class PlotWindow:
     def __init__(self):
@@ -30,15 +29,11 @@ class PlotWindow:
         self.ax1.plot(xdata, buf)
         plt.pause(0.01)
 
-
-pred_buffer = []
-rec_bin_buffer = bytearray()  # binaryのままにする
-
+pred_buffer = [] # 推論用のリスト
 
 # 取得した音声を np.array に変換＆1~-1にマップ
 def convert_buffer(arg: list) -> np.array:
     return np.array(arg) / 32768.0
-
 
 class AudioInputStream:
     def __init__(self):
@@ -55,7 +50,7 @@ class AudioInputStream:
             frames_per_buffer=self.CHUNK,
             stream_callback=self.update,
         )
-
+        
     def recordOnce(self, filename, data: list):
         w = wave.Wave_write(filename)
         w.setparams(
@@ -81,9 +76,7 @@ class AudioInputStream:
         pred_buffer.extend(wave)
         # 2. 超えている場合、最初のCHUNK分を削除
         if len(pred_buffer) > CHUNK_MEL:
-            # print(f"buf len before: {len(pred_buffer)}")
             del pred_buffer[:CHUNK]
-            # print(f"buf len after: {len(pred_buffer)}")
         return (None, pyaudio.paContinue)
 
 
@@ -100,10 +93,9 @@ if __name__ == "__main__":
     isPressedRecKey = False
     while ais.stream.is_active():
         if len(pred_buffer) == CHUNK_MEL:
-            win.update(xdata, pred_buffer)
-            buf = convert_buffer(pred_buffer)
+            win.update(xdata, pred_buffer) # 音声波形を表示
             ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
-
+            buf = convert_buffer(pred_buffer) # 推論用に変換
             predicted_keyword = kss.predict(buf, SAMPLE_RATE)
             # print(f"Predicted keyword is: {predicted_keyword}")
             if predicted_keyword == "dog":
@@ -111,15 +103,11 @@ if __name__ == "__main__":
             else:
                 detect = "____"
             print("\rdetect: {}".format(detect), end="")
-        # val = ais.AudioInput()[0]
-        # rms = np.sqrt(np.mean(val**2))
-        # print("\rVal = {0}".format(rms), end="")
         i += 1
         time.sleep(0.1)  # 推論頻度を決定
-
-    # ais.stream.stop_stream()
-    # ais.stream.close()
-    # ais.close()
+    ais.stream.stop_stream()
+    ais.stream.close()
+    ais.close()
 
     # predicted_keyword = kss.predict(TEST_AUDIO_FILE_PATH)
     # print(f"Predicted keyword is: {predicted_keyword}")
@@ -133,18 +121,3 @@ if __name__ == "__main__":
 # # 0:4410 を捨てる
 # raw_audio_buffer = raw_audio_buffer[conf.mels_onestep_samples:]
 # ###########################################################
-
-
-# global kss
-# buf = np.array(pred_buffer) / 32768.0
-# predicted_keyword = kss.predict(buf, SAMPLE_RATE)
-# print(f"Predicted keyword is: {predicted_keyword}")
-
-# 音声記録用
-# global rec_bin_buffer
-# rec_bin_buffer.extend(in_data)
-# if len(rec_bin_buffer) > CHUNK_MEL:
-#     print(f"buf len before: {len(rec_bin_buffer)}")
-#     # rec_bin_buffer[0:CHUNK] = b''
-#     rec_bin_buffer = rec_bin_buffer[CHUNK:]
-#     print(f"buf len after: {len(rec_bin_buffer)}")
