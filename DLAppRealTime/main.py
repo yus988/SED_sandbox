@@ -9,6 +9,8 @@ import sys
 import scipy.io.wavfile
 import wave
 import keyboard
+from concurrent.futures import ThreadPoolExecutor
+import matplotlib.pyplot as plt
 
 TEST_AUDIO_FILE_PATH = "./test/left.wav"
 SAMPLE_RATE = 22050
@@ -16,31 +18,28 @@ CHUNK = int(SAMPLE_RATE / 10)
 CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 
+class PlotWindow:
+    def __init__(self):
+        self.fig, (self.ax1) = plt.subplots(1, 1, figsize=(12, 8))
+        # self.ax1.plot([1,2,3], [3,4,5])
+
+    def update(self, xdata, ydata):
+        plt.cla()
+        buf = convert_buffer(ydata)
+        self.ax1.plot(xdata, buf)
+        plt.pause(0.01)
+        # plt.show()
+
+
 # # 使用する推論を代入
 # def setPredictor(self, predictor):
 #     self.pred = predictor
 pred_buffer = []
-rec_bin_buffer = bytearray() # binaryのままにする
+rec_bin_buffer = bytearray()  # binaryのままにする
 
 
-class PlotWindow:
-    def __init__(self):
-        # プロット初期設定
-        self.win = pg.GraphicsLayoutWidget(show=True)
-        self.win.setWindowTitle("realtime plot")
-        self.plt = self.win.addPlot()  # プロットのビジュアル関係
-        self.plt.setYRange(-1, 1)  # y軸の上限、下限の設定
-        self.curve = self.plt.plot()  # プロットデータを入れる場所
-
-        # アップデート時間設定
-        self.timer = pg.QtCore.QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(10)  # 10msごとにupdateを呼び出し
-
-    def update(self):
-        global pred_buffer
-        buf = np.array(pred_buffer) / 32768.0
-        self.curve.setData(buf)
+def convert_buffer(buffer):
+    return np.array(pred_buffer) / 32768.0
 
 
 class AudioInputStream:
@@ -78,7 +77,7 @@ class AudioInputStream:
         # 録音テスト
         # if keyboard.is_pressed("r"):
         #     self.wavefile.writeframes(in_data)
-        
+
         # print(in_data[:10])
         global pred_buffer
         # 0. 取得したデータを16進数で配列化
@@ -107,43 +106,64 @@ class AudioInputStream:
 
         return (None, pyaudio.paContinue)
 
+
 if __name__ == "__main__":
     # pro_size = 10
     # for i in range(1, pro_size + 1):
     #     pro_bar = ('=' * i) + (' ' * (pro_size - i))
     #     print('\r[{0}] {1}%'.format(pro_bar, i / pro_size * 100.), end='')
     #     time.sleep(0.5)
+
+    ############## mein loop ###################
+
+    win = PlotWindow()
+    # i = 0
+    # while 1:
+    #     win.update([0, 1, 2], [i, i+1, i+2])
+    #     i+=1
+    #     time.sleep(1)
+
     i = 0
     global kss
     kss = Keyword_Spotting_Service()
     ditect = ""
     ais = AudioInputStream()
+    # グラフ描画用
+    xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
     while ais.stream.is_active():
         # ais.recordOnce('./wav/rec_{}.wav'.format(i), rec_bin_buffer)
-        
-        # # print(f"{pred_buffer[:10]}")
+
         if len(pred_buffer) == CHUNK_MEL:
-            buf = np.array(pred_buffer) / 32768.0
+            win.update(xdata, pred_buffer)
+            
+            buf = convert_buffer(pred_buffer)
             predicted_keyword = kss.predict(buf, SAMPLE_RATE)
             # print(f"Predicted keyword is: {predicted_keyword}")
             if predicted_keyword == "dog":
                 detect = predicted_keyword
             else:
                 detect = "____"
-            print('\rdetect: {}'.format(detect), end='')
+            print("\rdetect: {}".format(detect), end="")
         # val = ais.AudioInput()[0]
         # rms = np.sqrt(np.mean(val**2))
         # print("\rVal = {0}".format(rms), end="")
 
         time.sleep(0.1)  # 推論頻度を決定
-        i+=1
+        i += 1
 
-    ais.stream.stop_stream()
-    ais.stream.close()
-    ais.close()
+    # ais.stream.stop_stream()
+    # ais.stream.close()
+    # ais.close()
 
     # predicted_keyword = kss.predict(TEST_AUDIO_FILE_PATH)
     # print(f"Predicted keyword is: {predicted_keyword}")
 
-
 # python ref/pyqtgraph/dispWave.py
+
+# ################ 予測用の配列抽出部分 #######################
+# # きちんとオーバーラップは考慮されている。
+# # 0:44100+4410 をメルスペクトログラムに変換
+# audio_to_convert = np.array(raw_audio_buffer[:conf.mels_convert_samples]) / 32767
+# # 0:4410 を捨てる
+# raw_audio_buffer = raw_audio_buffer[conf.mels_onestep_samples:]
+# ###########################################################
