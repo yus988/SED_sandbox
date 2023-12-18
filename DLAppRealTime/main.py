@@ -17,6 +17,7 @@ SAMPLE_RATE = 22050
 CHUNK = int(SAMPLE_RATE / 10)
 CHUNK_MEL = 22050  # 推定したい音の長さに合わせる。1秒=sample_rate
 
+
 # 推論に使われる音声を描画
 class PlotWindow:
     def __init__(self):
@@ -29,11 +30,14 @@ class PlotWindow:
         self.ax1.plot(xdata, buf)
         plt.pause(0.01)
 
-pred_buffer = [] # 推論用のリスト
+
+pred_buffer = []  # 推論用のリスト
+
 
 # 取得した音声を np.array に変換＆1~-1にマップ
 def convert_buffer(arg: list) -> np.array:
     return np.array(arg) / 32768.0
+
 
 class AudioInputStream:
     def __init__(self):
@@ -42,6 +46,8 @@ class AudioInputStream:
         self.audio = pyaudio.PyAudio()
         self.channel = 1
         self.rate = SAMPLE_RATE
+    
+    def start_stream(self):
         self.stream = self.audio.open(
             format=pyaudio.paInt16,
             channels=self.channel,
@@ -50,7 +56,8 @@ class AudioInputStream:
             frames_per_buffer=self.CHUNK,
             stream_callback=self.update,
         )
-        
+        print("stream started!")
+
     def recordOnce(self, filename, data: list):
         w = wave.Wave_write(filename)
         w.setparams(
@@ -80,22 +87,22 @@ class AudioInputStream:
         return (None, pyaudio.paContinue)
 
 
-if __name__ == "__main__":
-    ############## mein loop ###################
+# 連続的に推論を実行
+def pred_loop():
     win = PlotWindow()
     global kss
     kss = Keyword_Spotting_Service()
-    ditect = ""
     i = 0
-    ais = AudioInputStream()
-    # グラフ描画用
     xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
-    isPressedRecKey = False
+    # グラフ描画用
+    ais = AudioInputStream()
+    ais.start_stream()
+    # 連続的に実行
     while ais.stream.is_active():
         if len(pred_buffer) == CHUNK_MEL:
-            win.update(xdata, pred_buffer) # 音声波形を表示
+            win.update(xdata, pred_buffer)  # 音声波形を表示
             ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
-            buf = convert_buffer(pred_buffer) # 推論用に変換
+            buf = convert_buffer(pred_buffer)  # 推論用に変換
             predicted_keyword = kss.predict(buf, SAMPLE_RATE)
             # print(f"Predicted keyword is: {predicted_keyword}")
             if predicted_keyword == "dog":
@@ -107,10 +114,33 @@ if __name__ == "__main__":
         time.sleep(0.1)  # 推論頻度を決定
     ais.stream.stop_stream()
     ais.stream.close()
-    ais.close()
 
-    # predicted_keyword = kss.predict(TEST_AUDIO_FILE_PATH)
-    # print(f"Predicted keyword is: {predicted_keyword}")
+def pred_once():
+    win = PlotWindow()
+    global kss
+    kss = Keyword_Spotting_Service()
+    # グラフ描画用
+    xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
+    ais = AudioInputStream()
+    # キー入力を待ち受け
+    input('press any key to proceed: ')
+    ais.start_stream()
+    while ais.stream.is_active():
+        if len(pred_buffer) == CHUNK_MEL:
+            win.update(xdata, pred_buffer)  # 音声波形を表示
+            ais.recordOnce("./wav/rec_once.wav", pred_buffer)
+            buf = convert_buffer(pred_buffer)  # 推論用に変換
+            predicted_keyword = kss.predict(buf, SAMPLE_RATE)
+            print(f"Predicted keyword is: {predicted_keyword}")
+            break
+    print("Finish!")
+    ais.stream.stop_stream()
+    ais.stream.close()
+    input('press any key to close: ')
+
+if __name__ == "__main__":
+    pred_once()
+    # pred_loop()
 
 # python ref/pyqtgraph/dispWave.py
 
