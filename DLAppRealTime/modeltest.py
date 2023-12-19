@@ -1,6 +1,7 @@
 from ref.keyword_spotting_service import Keyword_Spotting_Service
 
-TEST_AUDIO_FILE_PATH = "./test/down.wav"
+# TEST_AUDIO_FILE_PATH = "./test/down.wav"
+TEST_AUDIO_FILE_PATH = "./wav/rec_once.wav"
 
 
 if __name__ == "__main__":

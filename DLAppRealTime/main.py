@@ -101,7 +101,7 @@ def pred_loop():
     while ais.stream.is_active():
         if len(pred_buffer) == CHUNK_MEL:
             win.update(xdata, pred_buffer)  # 音声波形を表示
-            ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
+            # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
             buf = convert_buffer(pred_buffer)  # 推論用に変換
             predicted_keyword = kss.predict(buf, SAMPLE_RATE)
             # print(f"Predicted keyword is: {predicted_keyword}")
@@ -136,11 +136,11 @@ def pred_once():
     print("Finish!")
     ais.stream.stop_stream()
     ais.stream.close()
-    input('press any key to close: ')
+    # input('press any key to close: ')
 
 if __name__ == "__main__":
-    pred_once()
-    # pred_loop()
+    # pred_once()
+    pred_loop()
 
 # python ref/pyqtgraph/dispWave.py
 
