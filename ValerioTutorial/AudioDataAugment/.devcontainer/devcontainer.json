@@ -10,21 +10,22 @@
   },
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
-
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
-
   // Uncomment the next line to run commands after the container is created.
   // "postCreateCommand": "cat /etc/os-release",
-
   // Configure tool-specific properties.
   // "customizations": {},
-
   // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
   "remoteUser": "devcontainer",
   "customizations": {
     "vscode": {
-	  "extensions": [],
+      "extensions": [
+        "MS-CEINTL.vscode-language-pack-ja",
+        "ms-python.black-formatter",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
       "settings": {
         "python.autoComplete.extraPaths": [
           "/usr/local/lib/python3.8/site-packages"

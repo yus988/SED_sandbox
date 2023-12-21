@@ -1,9 +1,9 @@
 version: "3"
 services:
-  pytorch_test:
+  auido_data_augment:
     restart: always
     build: .
-    container_name: "pytorch_test"
+    container_name: "auido_data_augment"
     working_dir: "/root/"
     tty: true
     volumes:
