@@ -4,9 +4,6 @@ import time
 import array
 import queue
 from kss_raw import Keyword_Spotting_Service
-import pyqtgraph as pg
-import sys
-import scipy.io.wavfile
 import wave
 import keyboard
 from concurrent.futures import ThreadPoolExecutor

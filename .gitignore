@@ -3,7 +3,8 @@ node_modules/
 data/
 datasets/
 dataset/
-
+__pycache__/
+.venv/
 # ファイルのパターン一致でコンパイルなどで生成したファイルを指定する場合
 *.com
 *.class
