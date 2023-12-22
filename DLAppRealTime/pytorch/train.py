@@ -14,6 +14,7 @@ AUDIO_DIR = "./data/UrbanSound8K/audio"
 SAMPLE_RATE = 22050
 NUM_SAMPLES = 22050
 
+
 def train_one_epoch(model, data_loader, loss_fn, optimiser, device):
     for input, target in data_loader:
         input, target = input.to(device), target.to(device)
@@ -40,13 +41,9 @@ def train(model, data_loader, loss_fn, optimiser, device, epochs):
 
 
 if __name__ == "__main__":
-
-    if torch.cuda.is_available():
-        device = "cuda"
-    else:
-        device = "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using {device} device")
-    
+
     mel_spectrogram = torchaudio.transforms.MelSpectrogram(
         sample_rate=SAMPLE_RATE, n_fft=1024, hop_length=512, n_mels=64
     )
