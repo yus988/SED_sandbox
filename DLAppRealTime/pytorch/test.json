@@ -1,0 +1,15 @@
+{'audio': 
+    {
+    'path': 'C:/GitHub/SED_sandbox/DLAppRealTime/pytorch/data/UrbanSound8K/audio/fold1/101415-3-0-2.wav',
+    'array': array([
+                -0.00015259,
+                -0.00015259,
+                -0.00018311, ...,
+                -0.0480957,
+                -0.04779053,
+                -0.04751587
+            ]),
+    'sampling_rate': 48000
+    },
+ 'label': 0
+}
