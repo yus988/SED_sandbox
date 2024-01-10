@@ -1,10 +1,9 @@
 # modification to adapt input audio buffer
 from transformers import pipeline
 
-MODEL_PATH = (
-    "./pytorch/model/ast-finetuned-audioset-10-10-0.4593-finetuned-us8k/checkpoint-983/"
-)
-
+MOEL_NAME = "ast-finetuned-audioset-10-10-0.4593-finetuned-pingpong"
+CHECKPOINT = "checkpoint-36"
+MODEL_PATH = f"./pytorch/model/{MOEL_NAME}/{CHECKPOINT}/"
 
 class _Inference:
     _instance = None
@@ -18,7 +17,7 @@ class _Inference:
 
     def classify_audio(self, filepath):
         preds = self.pipe(filepath)
-        return preds[0]['label']
+        # return preds[0]['label']
         outputs = {}
         for p in preds:
             outputs[p["label"]] = p["score"]

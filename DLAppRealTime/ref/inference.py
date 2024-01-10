@@ -1,7 +1,7 @@
 import torch
 import torchaudio
 from cnn import CNNNetwork
-from urbansounddataset import UrbanSoundSataset
+from ref.urbansound.urbansounddataset import UrbanSoundSataset
 from train import AUDIO_DIR, ANNOTATIONS_FILE, SAMPLE_RATE, NUM_SAMPLES
 
 class_mapping = [

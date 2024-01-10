@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 import torchaudio
-from urbansounddataset import UrbanSoundSataset
+from ref.urbansound.urbansounddataset import UrbanSoundSataset
 from cnn import CNNNetwork
 
 BATCH_SIZE = 128

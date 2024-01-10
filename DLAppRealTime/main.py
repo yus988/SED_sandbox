@@ -12,7 +12,8 @@ import librosa
 TEST_AUDIO_FILE_PATH = "./wav/185909-2-0-116.wav"
 SAMPLE_RATE = 16000
 CHUNK = int(SAMPLE_RATE / 1)
-RECORD_SEC = 5
+RECORD_SEC = 1
+INFERENCE_INTERVAL = 0.1
 CHUNK_MEL = SAMPLE_RATE * RECORD_SEC  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 pred_buffer = []  # 推論用のリスト
@@ -22,6 +23,7 @@ pred_buffer = []  # 推論用のリスト
 class PlotWindow:
     def __init__(self):
         self.fig, (self.ax1) = plt.subplots(1, 1, figsize=(12, 8))
+        plt.ylim(-0.2, 0.2)
         # self.ax1.plot([1,2,3], [3,4,5])
 
     def update(self, xdata, ydata):
@@ -83,10 +85,10 @@ class AudioInputStream:
             del pred_buffer[:CHUNK]
         return (None, pyaudio.paContinue)
 
+
 # 連続的に推論を実行
 def pred_loop():
     win = PlotWindow()
-    i = 0
     xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
     # グラフ描画用
     ais = AudioInputStream()
@@ -97,15 +99,15 @@ def pred_loop():
             win.update(xdata, pred_buffer)  # 音声波形を表示
             # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
             buf = convert_buffer(pred_buffer)  # 推論用に変換
-            predicted_keyword = ""
+            # predicted_keyword = inf.classify_audio(buf)
             # print(f"Predicted keyword is: {predicted_keyword}")
-            if predicted_keyword == "dog":
-                detect = predicted_keyword
-            else:
-                detect = "____"
-            print("\rdetect: {}".format(detect), end="")
-        i += 1
-        time.sleep(0.1)  # 推論頻度を決定
+            # if predicted_keyword == "dog":
+            #     detect = predicted_keyword
+            # else:
+            #     detect = "____"
+            # print("\rdetect: {}".format(detect), end="")
+        # time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
+
 
 # 1回のみ、デバッグ用
 def pred_once():
@@ -119,7 +121,7 @@ def pred_once():
     while ais.stream.is_active():
         if len(pred_buffer) == CHUNK_MEL:
             win.update(xdata, pred_buffer)  # 音声波形を表示
-            # ais.recordOnce("./wav/rec_once.wav", pred_buffer)
+            ais.recordOnce("./wav/rec_once.wav", pred_buffer)
             buf = convert_buffer(pred_buffer)  # 推論用に変換
             predicted_keyword = inf.classify_audio(buf)
             print(f"Predicted keyword is: {predicted_keyword}")
@@ -132,6 +134,7 @@ def pred_once():
 if __name__ == "__main__":
     global inf
     inf = Inference_instance()
+    # pred_loop()
     pred_once()
     # singal, _ = librosa.load(TEST_AUDIO_FILE_PATH)
     # output = inf.classify_audio(singal)
