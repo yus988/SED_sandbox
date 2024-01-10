@@ -1,9 +1,12 @@
 # modification to adapt input audio buffer
 from transformers import pipeline
+import configparser
+config_ini = configparser.ConfigParser()
+config_ini.read('config.ini', encoding='utf-8')
 
-MOEL_NAME = "ast-finetuned-audioset-10-10-0.4593-finetuned-pingpong"
-CHECKPOINT = "checkpoint-36"
-MODEL_PATH = f"./pytorch/model/{MOEL_NAME}/{CHECKPOINT}/"
+MOEL_NAME = config_ini['DEFAULT']['model_name']
+CHECKPOINT = config_ini['DEFAULT']['checkpoint']
+MODEL_PATH = f"./model/{MOEL_NAME}/{CHECKPOINT}/"
 
 class _Inference:
     _instance = None

@@ -7,36 +7,34 @@ import wave
 from concurrent.futures import ThreadPoolExecutor
 import matplotlib.pyplot as plt
 import librosa
+import configparser
+config_ini = configparser.ConfigParser()
+config_ini.read('config.ini', encoding='utf-8')
 
-
-TEST_AUDIO_FILE_PATH = "./wav/185909-2-0-116.wav"
-SAMPLE_RATE = 16000
+SAMPLE_RATE = int(config_ini['DEFAULT']['sample_rate'])
 CHUNK = int(SAMPLE_RATE / 1)
-RECORD_SEC = 1
-INFERENCE_INTERVAL = 0.1
+RECORD_SEC = int(config_ini['DEFAULT']['record_duration'])
+INFERENCE_INTERVAL = float(config_ini['DEFAULT']['inference_interval'])
 CHUNK_MEL = SAMPLE_RATE * RECORD_SEC  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 pred_buffer = []  # 推論用のリスト
-
 
 # 推論に使われる音声を描画
 class PlotWindow:
     def __init__(self):
         self.fig, (self.ax1) = plt.subplots(1, 1, figsize=(12, 8))
-        plt.ylim(-0.2, 0.2)
         # self.ax1.plot([1,2,3], [3,4,5])
 
     def update(self, xdata, ydata):
         plt.cla()
         buf = convert_buffer(ydata)
         self.ax1.plot(xdata, buf)
+        plt.ylim(-0.2, 0.2)
         plt.pause(0.01)
-
 
 # 取得した音声を np.array に変換＆1~-1にマップ
 def convert_buffer(arg: list) -> np.array:
     return np.array(arg) / 32768.0
-
 
 class AudioInputStream:
     def __init__(self):
@@ -69,7 +67,7 @@ class AudioInputStream:
                 "not compressed",  # no compression
             )
         )
-        w.writeframes(array.array("h", data).tostring())
+        w.writeframes(array.array("h", data).tobytes())
         w.close()
 
     # 音声を取り込む度に実行する関数
@@ -99,15 +97,14 @@ def pred_loop():
             win.update(xdata, pred_buffer)  # 音声波形を表示
             # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
             buf = convert_buffer(pred_buffer)  # 推論用に変換
-            # predicted_keyword = inf.classify_audio(buf)
-            # print(f"Predicted keyword is: {predicted_keyword}")
+            predicted_keyword = inf.classify_audio(buf)
+            print(f"Predicted keyword is: {predicted_keyword}")
             # if predicted_keyword == "dog":
             #     detect = predicted_keyword
             # else:
             #     detect = "____"
             # print("\rdetect: {}".format(detect), end="")
-        # time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
-
+        time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
 
 # 1回のみ、デバッグ用
 def pred_once():
@@ -130,12 +127,10 @@ def pred_once():
     ais.stream.stop_stream()
     ais.stream.close()
 
-
 if __name__ == "__main__":
     global inf
     inf = Inference_instance()
-    # pred_loop()
-    pred_once()
-    # singal, _ = librosa.load(TEST_AUDIO_FILE_PATH)
-    # output = inf.classify_audio(singal)
-    # print(output)
+    if config_ini['DEFAULT']['runtype'] == "loop":
+        pred_loop()
+    if config_ini['DEFAULT']['runtype'] == "once":
+        pred_once()
