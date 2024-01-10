@@ -8,33 +8,37 @@ from concurrent.futures import ThreadPoolExecutor
 import matplotlib.pyplot as plt
 import librosa
 import configparser
-config_ini = configparser.ConfigParser()
-config_ini.read('config.ini', encoding='utf-8')
+import os
+import errno
 
-SAMPLE_RATE = int(config_ini['DEFAULT']['sample_rate'])
-CHUNK = int(SAMPLE_RATE / 1)
-RECORD_SEC = int(config_ini['DEFAULT']['record_duration'])
-INFERENCE_INTERVAL = float(config_ini['DEFAULT']['inference_interval'])
+config_ini = configparser.ConfigParser()
+config_ini_path = "config.ini"
+config_ini.read(config_ini_path, encoding="utf-8")
+if not os.path.exists(config_ini_path):
+    raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), config_ini_path)
+
+SAMPLE_RATE = int(config_ini["DEFAULT"]["sample_rate"])
+CHUNK = int(SAMPLE_RATE / 10)
+RECORD_SEC = int(config_ini["DEFAULT"]["record_duration"])
+INFERENCE_INTERVAL = float(config_ini["DEFAULT"]["inference_interval"])
 CHUNK_MEL = SAMPLE_RATE * RECORD_SEC  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 pred_buffer = []  # 推論用のリスト
 
-# 推論に使われる音声を描画
-class PlotWindow:
-    def __init__(self):
-        self.fig, (self.ax1) = plt.subplots(1, 1, figsize=(12, 8))
-        # self.ax1.plot([1,2,3], [3,4,5])
 
-    def update(self, xdata, ydata):
-        plt.cla()
-        buf = convert_buffer(ydata)
-        self.ax1.plot(xdata, buf)
-        plt.ylim(-0.2, 0.2)
-        plt.pause(0.01)
+# 推論に使われる音声を描画
+def updateWindow(xdata, ydata):
+    plt.plot(xdata, ydata)
+    plt.draw()
+    plt.ylim(-4000, 4000)
+    plt.pause(0.001)
+    plt.cla()
+
 
 # 取得した音声を np.array に変換＆1~-1にマップ
 def convert_buffer(arg: list) -> np.array:
     return np.array(arg) / 32768.0
+
 
 class AudioInputStream:
     def __init__(self):
@@ -86,29 +90,36 @@ class AudioInputStream:
 
 # 連続的に推論を実行
 def pred_loop():
-    win = PlotWindow()
     xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
     # グラフ描画用
     ais = AudioInputStream()
     ais.start_stream()
+    i = 0
     # 連続的に実行
     while ais.stream.is_active():
-        if len(pred_buffer) == CHUNK_MEL:
-            win.update(xdata, pred_buffer)  # 音声波形を表示
-            # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
-            buf = convert_buffer(pred_buffer)  # 推論用に変換
-            predicted_keyword = inf.classify_audio(buf)
-            print(f"Predicted keyword is: {predicted_keyword}")
-            # if predicted_keyword == "dog":
-            #     detect = predicted_keyword
-            # else:
-            #     detect = "____"
-            # print("\rdetect: {}".format(detect), end="")
-        time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
+        try:
+            if len(pred_buffer) == CHUNK_MEL:
+                updateWindow(xdata, pred_buffer)  # 音声波形を表示
+                # print(i)
+                # i += 1
+                # # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
+                buf = convert_buffer(pred_buffer)  # 推論用に変換
+                predicted_keyword = inf.classify_audio(buf)
+                print(f"Predicted keyword is: {predicted_keyword}")
+                # if predicted_keyword == "dog":
+                #     detect = predicted_keyword
+                # else:
+                #     detect = "____"
+                # print("\rdetect: {}".format(detect), end="")
+            time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
+        except KeyboardInterrupt:
+            break
+    ais.stream.stop_stream()
+    ais.stream.close()
+
 
 # 1回のみ、デバッグ用
 def pred_once():
-    win = PlotWindow()
     # グラフ描画用
     xdata = np.linspace(0, CHUNK_MEL, CHUNK_MEL)
     ais = AudioInputStream()
@@ -117,7 +128,7 @@ def pred_once():
     ais.start_stream()
     while ais.stream.is_active():
         if len(pred_buffer) == CHUNK_MEL:
-            win.update(xdata, pred_buffer)  # 音声波形を表示
+            updateWindow(xdata, pred_buffer)  # 音声波形を表示
             ais.recordOnce("./wav/rec_once.wav", pred_buffer)
             buf = convert_buffer(pred_buffer)  # 推論用に変換
             predicted_keyword = inf.classify_audio(buf)
@@ -127,10 +138,11 @@ def pred_once():
     ais.stream.stop_stream()
     ais.stream.close()
 
+
 if __name__ == "__main__":
     global inf
     inf = Inference_instance()
-    if config_ini['DEFAULT']['runtype'] == "loop":
+    if config_ini["DEFAULT"]["runtype"] == "loop":
         pred_loop()
-    if config_ini['DEFAULT']['runtype'] == "once":
+    if config_ini["DEFAULT"]["runtype"] == "once":
         pred_once()
