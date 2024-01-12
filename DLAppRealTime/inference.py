@@ -15,9 +15,11 @@ class _Inference:
         self.pipe = pipeline(
             "audio-classification",
             model=MODEL_PATH,
+            device=0, # use gpu for inference
             top_k=1,
         )
 
+    # filepath = buf
     def classify_audio(self, filepath):
         preds = self.pipe(filepath)
         # return preds[0]['label']
@@ -25,8 +27,7 @@ class _Inference:
         for p in preds:
             outputs[p["label"]] = p["score"]
         return outputs
-
-
+    
 def Inference_instance():
     # ensure that we only have 1 instance of KSS
     if _Inference._instance is None:

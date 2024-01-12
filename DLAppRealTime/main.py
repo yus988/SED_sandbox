@@ -18,10 +18,10 @@ if not os.path.exists(config_ini_path):
     raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), config_ini_path)
 
 SAMPLE_RATE = int(config_ini["DEFAULT"]["sample_rate"])
-CHUNK = int(SAMPLE_RATE / 10)
-RECORD_SEC = int(config_ini["DEFAULT"]["record_duration"])
+CHUNK = int(config_ini["DEFAULT"]["chunk"])
+RECORD_DURATION = float(config_ini["DEFAULT"]["record_duration"])
 INFERENCE_INTERVAL = float(config_ini["DEFAULT"]["inference_interval"])
-CHUNK_MEL = SAMPLE_RATE * RECORD_SEC  # 推定したい音の長さに合わせる。1秒=sample_rate
+CHUNK_MEL = int(SAMPLE_RATE * RECORD_DURATION)  # 推定したい音の長さに合わせる。1秒=sample_rate
 
 pred_buffer = []  # 推論用のリスト
 
@@ -33,7 +33,6 @@ def updateWindow(xdata, ydata):
     plt.ylim(-4000, 4000)
     plt.pause(0.001)
     plt.cla()
-
 
 # 取得した音声を np.array に変換＆1~-1にマップ
 def convert_buffer(arg: list) -> np.array:
@@ -95,28 +94,29 @@ def pred_loop():
     ais = AudioInputStream()
     ais.start_stream()
     i = 0
+    start = time.perf_counter()
     # 連続的に実行
     while ais.stream.is_active():
         try:
             if len(pred_buffer) == CHUNK_MEL:
-                updateWindow(xdata, pred_buffer)  # 音声波形を表示
-                # print(i)
-                # i += 1
-                # # ais.recordOnce("./wav/rec_{}.wav".format(i), pred_buffer)
-                buf = convert_buffer(pred_buffer)  # 推論用に変換
+                start = time.perf_counter()
+                # updateWindow(xdata, pred_buffer)  # 音声波形を表示 0.055秒程度かかる
+                buf = convert_buffer(pred_buffer)  # 推論用に変換 
                 predicted_keyword = inf.classify_audio(buf)
                 print(f"Predicted keyword is: {predicted_keyword}")
+
                 # if predicted_keyword == "dog":
                 #     detect = predicted_keyword
                 # else:
                 #     detect = "____"
                 # print("\rdetect: {}".format(detect), end="")
-            time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
+                end = time.perf_counter()
+                print(end - start)
+            # time.sleep(INFERENCE_INTERVAL)  # 推論頻度を決定
         except KeyboardInterrupt:
             break
     ais.stream.stop_stream()
     ais.stream.close()
-
 
 # 1回のみ、デバッグ用
 def pred_once():
